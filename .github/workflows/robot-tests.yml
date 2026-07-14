@@ -48,7 +48,7 @@ jobs:
         run: robocop check tests/ resources/
 
   robot-tests:
-    name: Robot Tests (${{ env.ENV }})
+    name: Robot Tests (${{ github.event.inputs.environment || 'staging' }})
     runs-on: ubuntu-latest
     needs: robocop-lint
     timeout-minutes: 30
@@ -79,7 +79,7 @@ jobs:
           robot \
             --outputdir results \
             --variable ENV:${{ env.ENV }} \
-            --variable BASE_URL:${{ BASE_URL }} \
+            --variable BASE_URL:$BASE_URL \
             --include ${TAGS} \
             --loglevel INFO \
             --xunit results/junit.xml \
