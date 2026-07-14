@@ -97,14 +97,20 @@ jobs:
         run: robotmetrics --inputpath results --output output.xml -M metrics.html
         continue-on-error: true
 
-      - name: Publish test report summary
+      - name: Flatten JUnit report for GitHub
         if: always() && hashFiles('results/junit.xml') != ''
+        run: python3 .github/scripts/flatten_junit.py results/junit.xml results/junit-flat.xml
+
+      - name: Publish test report summary
+        if: always() && hashFiles('results/junit-flat.xml') != ''
         uses: dorny/test-reporter@v3
         with:
           name: Robot Framework Results
-          path: results/junit.xml
+          path: results/junit-flat.xml
           reporter: java-junit
           fail-on-error: false
+          list-suites: all
+          list-tests: all
 
       - name: Upload test artifacts
         if: always()
@@ -117,6 +123,7 @@ jobs:
             results/report.html
             results/metrics.html
             results/junit.xml
+            results/junit-flat.xml
           if-no-files-found: ignore
           retention-days: 30
 
