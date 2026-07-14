@@ -88,9 +88,10 @@ jobs:
         continue-on-error: true
         id: robot
 
-      - name: Generate metrics JSON
+      - name: Generate metrics report
         if: always() && hashFiles('results/output.xml') != ''
-        run: robotmetrics --inputpath results/output.xml --output results/metrics.json
+        run: robotmetrics --inputpath results --output output.xml -M metrics.html
+        continue-on-error: true
 
       - name: Publish test report summary
         if: always() && hashFiles('results/junit.xml') != ''
@@ -110,7 +111,7 @@ jobs:
             results/output.xml
             results/log.html
             results/report.html
-            results/metrics.json
+            results/metrics.html
             results/junit.xml
           if-no-files-found: ignore
           retention-days: 30
