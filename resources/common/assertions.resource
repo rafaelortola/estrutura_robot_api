@@ -1,6 +1,8 @@
 *** Settings ***
+Documentation    Keywords de asserção para validação de respostas HTTP e JSON
 Library    Collections
 Library    JSONLibrary
+
 
 *** Keywords ***
 Dictionary Should Contain Keys
@@ -13,12 +15,12 @@ Dictionary Should Contain Keys
 Response JSON Should Contain Key
     [Documentation]    Valida que a resposta JSON contém uma chave específica
     [Arguments]    ${response}    ${key}
-    ${json}=    Set Variable    ${response.json()}
+    VAR    ${json}    ${response.json()}
     Dictionary Should Contain Key    ${json}    ${key}
 
 Response Time Should Be Less Than
     [Documentation]    Valida tempo de resposta em milissegundos
     [Arguments]    ${response}    ${max_ms}
-    ${elapsed}=    Set Variable    ${response.elapsed.total_seconds() * 1000}
+    VAR    ${elapsed}    ${response.elapsed.total_seconds() * 1000}
     Should Be True    ${elapsed} < ${max_ms}
     ...    msg=Response time ${elapsed}ms exceeded ${max_ms}ms

@@ -33,10 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -48,17 +48,17 @@ jobs:
         run: robocop check tests/ resources/
 
   robot-tests:
-    name: Robot Tests (${{ env.ENV }})
+    name: Robot Tests (${{ github.event.inputs.environment || 'staging' }})
     runs-on: ubuntu-latest
     needs: robocop-lint
     timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -75,25 +75,27 @@ jobs:
 
       - name: Run Robot Framework tests
         run: |
+          mkdir -p results
           TAGS="${{ github.event.inputs.tags || 'smoke' }}"
           robot \
             --outputdir results \
             --variable ENV:${{ env.ENV }} \
-            --variable BASE_URL:${{ BASE_URL }} \
+            --variable BASE_URL:$BASE_URL \
             --include ${TAGS} \
             --loglevel INFO \
-            --xunit results/junit.xml \
+            --xunit junit.xml \
             tests/
         continue-on-error: true
         id: robot
 
-      - name: Generate metrics JSON
-        if: always()
-        run: robotmetrics --inputpath results/output.xml --output results/metrics.json
+      - name: Generate metrics report
+        if: always() && hashFiles('results/output.xml') != ''
+        run: robotmetrics --inputpath results --output output.xml -M metrics.html
+        continue-on-error: true
 
       - name: Publish test report summary
-        if: always()
-        uses: dorny/test-reporter@v1
+        if: always() && hashFiles('results/junit.xml') != ''
+        uses: dorny/test-reporter@v3
         with:
           name: Robot Framework Results
           path: results/junit.xml
@@ -102,15 +104,16 @@ jobs:
 
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: robot-results-${{ env.ENV }}-${{ github.run_number }}
           path: |
             results/output.xml
             results/log.html
             results/report.html
-            results/metrics.json
+            results/metrics.html
             results/junit.xml
+          if-no-files-found: ignore
           retention-days: 30
 
       - name: Fail job if tests failed
