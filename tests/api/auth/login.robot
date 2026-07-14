@@ -1,8 +1,8 @@
 *** Settings ***
 Documentation    Testes de autenticação e autorização
-Resource           ../../resources/common/api_session.resource
-Resource           ../../resources/common/auth.resource
-Resource           ../../resources/common/assertions.resource
+Resource           ../../../resources/common/api_session.resource
+Resource           ../../../resources/common/auth.resource
+Resource           ../../../resources/common/assertions.resource
 Suite Setup        Create API Session
 Suite Teardown     Delete All Sessions
 Test Tags       api    auth

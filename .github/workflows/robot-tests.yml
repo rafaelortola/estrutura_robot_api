@@ -75,6 +75,7 @@ jobs:
 
       - name: Run Robot Framework tests
         run: |
+          mkdir -p results
           TAGS="${{ github.event.inputs.tags || 'smoke' }}"
           robot \
             --outputdir results \
@@ -82,18 +83,18 @@ jobs:
             --variable BASE_URL:$BASE_URL \
             --include ${TAGS} \
             --loglevel INFO \
-            --xunit results/junit.xml \
+            --xunit junit.xml \
             tests/
         continue-on-error: true
         id: robot
 
       - name: Generate metrics JSON
-        if: always()
+        if: always() && hashFiles('results/output.xml') != ''
         run: robotmetrics --inputpath results/output.xml --output results/metrics.json
 
       - name: Publish test report summary
-        if: always()
-        uses: dorny/test-reporter@v1
+        if: always() && hashFiles('results/junit.xml') != ''
+        uses: dorny/test-reporter@v3
         with:
           name: Robot Framework Results
           path: results/junit.xml
@@ -102,7 +103,7 @@ jobs:
 
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: robot-results-${{ env.ENV }}-${{ github.run_number }}
           path: |
@@ -111,6 +112,7 @@ jobs:
             results/report.html
             results/metrics.json
             results/junit.xml
+          if-no-files-found: ignore
           retention-days: 30
 
       - name: Fail job if tests failed

@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation    Testes CRUD de usuários
-Resource           ../../resources/common/api_session.resource
-Resource           ../../resources/common/assertions.resource
+Resource           ../../../resources/common/api_session.resource
+Resource           ../../../resources/common/assertions.resource
 Suite Setup        Create API Session
 Suite Teardown     Delete All Sessions
 Test Tags       api    users

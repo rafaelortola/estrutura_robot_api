@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation    Smoke tests - Health check da API
-Resource           ../../resources/common/api_session.resource
-Resource           ../../resources/common/assertions.resource
+Resource           ../../../resources/common/api_session.resource
+Resource           ../../../resources/common/assertions.resource
 Suite Setup        Create API Session
 Suite Teardown     Delete All Sessions
 Test Tags       api    health    smoke
