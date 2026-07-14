@@ -19,9 +19,9 @@ on:
           - staging
           - prod
       tags:
-        description: 'Tags Robot (ex: smoke, api, regression)'
+        description: 'Tags Robot (ex: smoke, api, regression). Vazio = todos os testes'
         required: false
-        default: 'smoke'
+        default: ''
 
 env:
   PYTHON_VERSION: '3.12'
@@ -76,12 +76,16 @@ jobs:
       - name: Run Robot Framework tests
         run: |
           mkdir -p results
-          TAGS="${{ github.event.inputs.tags || 'smoke' }}"
+          TAGS="${{ github.event.inputs.tags }}"
+          INCLUDE_ARGS=""
+          if [ -n "$TAGS" ]; then
+            INCLUDE_ARGS="--include ${TAGS}"
+          fi
           robot \
             --outputdir results \
             --variable ENV:${{ env.ENV }} \
             --variable BASE_URL:$BASE_URL \
-            --include ${TAGS} \
+            ${INCLUDE_ARGS} \
             --loglevel INFO \
             --xunit junit.xml \
             tests/
