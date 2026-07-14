@@ -1,0 +1,118 @@
+name: Robot Framework Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 6 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente de execução'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      tags:
+        description: 'Tags Robot (ex: smoke, api, regression)'
+        required: false
+        default: 'smoke'
+
+env:
+  PYTHON_VERSION: '3.12'
+  ENV: ${{ github.event.inputs.environment || 'staging' }}
+
+jobs:
+  robocop-lint:
+    name: Robocop Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install Robocop
+        run: pip install robotframework-robocop
+
+      - name: Run Robocop
+        run: robocop check tests/ resources/
+
+  robot-tests:
+    name: Robot Tests (${{ env.ENV }})
+    runs-on: ubuntu-latest
+    needs: robocop-lint
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Load environment variables
+        run: |
+          BASE_URL=$(python -c "import yaml; print(yaml.safe_load(open('config/environments.yaml'))['${{ env.ENV }}']['BASE_URL'])")
+          echo "BASE_URL=$BASE_URL" >> $GITHUB_ENV
+
+      - name: Run Robot Framework tests
+        run: |
+          TAGS="${{ github.event.inputs.tags || 'smoke' }}"
+          robot \
+            --outputdir results \
+            --variable ENV:${{ env.ENV }} \
+            --variable BASE_URL:${{ BASE_URL }} \
+            --include ${TAGS} \
+            --loglevel INFO \
+            --xunit results/junit.xml \
+            tests/
+        continue-on-error: true
+        id: robot
+
+      - name: Generate metrics JSON
+        if: always()
+        run: robotmetrics --inputpath results/output.xml --output results/metrics.json
+
+      - name: Publish test report summary
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Robot Framework Results
+          path: results/junit.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-results-${{ env.ENV }}-${{ github.run_number }}
+          path: |
+            results/output.xml
+            results/log.html
+            results/report.html
+            results/metrics.json
+            results/junit.xml
+          retention-days: 30
+
+      - name: Fail job if tests failed
+        if: steps.robot.outcome == 'failure'
+        run: exit 1

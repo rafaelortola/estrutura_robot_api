@@ -1,0 +1,15 @@
+users:
+  valid:
+    name: John Doe
+    username: johndoe
+    email: john@example.com
+  invalid:
+    name: ""
+    username: ""
+    email: invalid-email
+
+posts:
+  valid:
+    title: Test Post
+    body: This is a test post body
+    userId: 1

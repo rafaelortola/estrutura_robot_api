@@ -1,0 +1,7 @@
+[tool.robotframework]
+output-dir = "results"
+log-level = "INFO"
+console-width = 120
+
+[tool.robotframework.variables]
+ENV = "staging"

@@ -1,0 +1,7 @@
+default_headers:
+  Content-Type: application/json
+  Accept: application/json
+
+timeouts:
+  request: 15
+  connect: 5
