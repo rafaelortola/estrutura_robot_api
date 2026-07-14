@@ -1,6 +1,8 @@
 *** Settings ***
-Library    RequestsLibrary
+Documentation    Keywords para criação de sessão HTTP e manipulação de respostas JSON
 Library    Collections
+Library    RequestsLibrary
+
 
 *** Keywords ***
 Create API Session
@@ -12,7 +14,7 @@ Create API Session
 Get JSON Response
     [Documentation]    Retorna o corpo da resposta como dicionário Python
     [Arguments]    ${response}
-    ${json}=    Set Variable    ${response.json()}
+    VAR    ${json}    ${response.json()}
     RETURN    ${json}
 
 Response Should Have Status
